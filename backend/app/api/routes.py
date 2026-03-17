@@ -41,7 +41,11 @@ async def query(request: QueryRequest):
         
         status = "low_confidence"
         decision = val.get("decision")
-        if decision == "trusted":
+        is_refusal = val.get("is_refusal", False)
+        
+        if is_refusal:
+            status = "refusal"
+        elif decision == "trusted":
             status = "trusted"
         elif hal.get("hallucination"):
             status = "hallucinated"

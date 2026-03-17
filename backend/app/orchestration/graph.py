@@ -59,10 +59,44 @@ def generate_node(state: AXIOMAIState) -> dict:
     return {"answer": answer}
 
 
+REFUSAL_PHRASES = [
+    "i cannot answer",
+    "i cannot tell you",
+    "i can't answer",
+    "i can't tell you",
+    "cannot answer the question",
+    "cannot answer your question",
+    "does not contain",
+    "no relevant information",
+    "no information about",
+    "not contained in the context",
+    "not found in the provided",
+    "the provided context does not",
+    "the context does not contain",
+    "based on the provided information",
+    "i don't have enough information",
+]
+
+def _is_refusal(answer: str) -> bool:
+    """Check if the LLM answer is a refusal/non-answer."""
+    answer_lower = answer.lower().strip()
+    return any(phrase in answer_lower for phrase in REFUSAL_PHRASES)
+
+
 def validate_node(state: AXIOMAIState) -> dict:
     """Validate the answer and compute trust score."""
     answer = state["answer"]
     documents = state["documents"]
+
+    # If the LLM refused to answer, override with untrusted/refusal
+    if _is_refusal(answer):
+        print(f"[VALIDATE] Refusal detected — overriding to untrusted (score: 0.0)")
+        return {"validation": {
+            "trust_score": 0.0,
+            "decision": "untrusted",
+            "is_refusal": True
+        }}
+
     validation = validator.validate(answer, documents)
     print(f"[VALIDATE] Trust Score: {validation['trust_score']} | Decision: {validation['decision']}")
     return {"validation": validation}

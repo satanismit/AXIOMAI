@@ -11,18 +11,29 @@ import QueryPage from './pages/QueryPage';
 import System from './pages/System';
 import Trust from './pages/Trust';
 
+// Global System Components
+import TargetCursor from './components/system/TargetCursor';
+
 function App() {
     return (
-        <Routes>
-            <Route path="/" element={<Splash />} />
-            <Route element={<Layout />}>
-                <Route path="/home" element={<Home />} />
-                <Route path="/query" element={<QueryPage />} />
-                <Route path="/system" element={<System />} />
-                <Route path="/trust" element={<Trust />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
+        <>
+            <TargetCursor
+                spinDuration={4}
+                hideDefaultCursor={true}
+                parallaxOn={true}
+                hoverDuration={0.3}
+            />
+            <Routes>
+                <Route path="/" element={<Splash />} />
+                <Route element={<Layout />}>
+                    <Route path="/home" element={<Home />} />
+                    <Route path="/query" element={<QueryPage />} />
+                    <Route path="/system" element={<System />} />
+                    <Route path="/trust" element={<Trust />} />
+                </Route>
+                <Route path="*" element={<Navigate to="/home" replace />} />
+            </Routes>
+        </>
     );
 }
 

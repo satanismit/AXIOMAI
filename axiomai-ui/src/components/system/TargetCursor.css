@@ -1,0 +1,137 @@
+/* src/components/system/TargetCursor.css */
+
+/*==============================================
+  System Environment / Background Magic
+==============================================*/
+.sys-env-wrapper {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    /* Send behind actual UI content, assuming app is stacked cleanly */
+    pointer-events: none;
+    /* Let all clicks pass through */
+    overflow: hidden;
+}
+
+.sys-grid-base {
+    position: absolute;
+    inset: 0;
+    background-size: 40px 40px;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+.sys-grid-interactive {
+    position: absolute;
+    inset: 0;
+    background-size: 40px 40px;
+    background-image:
+        linear-gradient(to right, rgba(45, 212, 191, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(45, 212, 191, 0.15) 1px, transparent 1px);
+    mask-image: radial-gradient(circle 220px at var(--mouse-x, 50vw) var(--mouse-y, 50vh), black 0%, transparent 100%);
+    -webkit-mask-image: radial-gradient(circle 220px at var(--mouse-x, 50vw) var(--mouse-y, 50vh), black 0%, transparent 100%);
+    transition: opacity 0.3s;
+}
+
+/* Faint Halo Glow */
+.sys-env-glow {
+    position: absolute;
+    width: 440px;
+    height: 440px;
+    left: 0;
+    top: 0;
+    background: radial-gradient(circle, rgba(45, 212, 191, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+/* Faint Radar Scanning Pulse */
+.sys-env-scan {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    left: 0;
+    top: 0;
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    background: radial-gradient(circle, rgba(45, 212, 191, 0.05) 0%, transparent 80%);
+    border-radius: 50%;
+    pointer-events: none;
+    transform-origin: center center;
+}
+
+/* Distorted Motion Streaks */
+.sys-env-trail {
+    position: absolute;
+    height: 6px;
+    left: 0;
+    top: 0;
+    background: linear-gradient(90deg, rgba(45, 212, 191, 0.0), rgba(45, 212, 191, 0.5));
+    border-radius: 6px;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    filter: blur(3px);
+    will-change: width, transform, opacity;
+}
+
+/*==============================================
+  Target Cursor Ring
+==============================================*/
+.target-cursor-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: difference;
+    transform: translate(-50%, -50%);
+}
+
+.target-cursor-dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    will-change: transform;
+}
+
+.target-cursor-corner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border: 2px solid #fff;
+    will-change: transform;
+}
+
+.corner-tl {
+    transform: translate(-150%, -150%);
+    border-right: none;
+    border-bottom: none;
+}
+
+.corner-tr {
+    transform: translate(50%, -150%);
+    border-left: none;
+    border-bottom: none;
+}
+
+.corner-br {
+    transform: translate(50%, 50%);
+    border-left: none;
+    border-top: none;
+}
+
+.corner-bl {
+    transform: translate(-150%, 50%);
+    border-right: none;
+    border-top: none;
+}

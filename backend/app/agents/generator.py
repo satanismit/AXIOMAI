@@ -9,7 +9,7 @@ class LLMGeneratorAgent:
         self.llm = ChatGoogleGenerativeAI(
             model=settings.LLM_MODEL_NAME,
             google_api_key=settings.GOOGLE_API_KEY,
-            temperature=0.0
+            temperature=0.2
         )
         self.prompt = get_generator_prompt()
         self.chain = self.prompt | self.llm | StrOutputParser()

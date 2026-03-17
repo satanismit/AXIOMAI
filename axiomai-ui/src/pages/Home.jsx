@@ -91,6 +91,39 @@ const Home = () => {
                     [ READ_SYSTEM_DOCS ]
                 </button>
             </div>
+
+            {/* Massive Hero Typography Component at the end of the page */}
+            <div style={{
+                marginTop: '6rem',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                userSelect: 'none',
+                pointerEvents: 'none'
+            }}>
+                <div style={{
+                    fontSize: 'clamp(5rem, 16vw, 14rem)',
+                    fontWeight: 800,
+                    letterSpacing: '-0.06em',
+                    lineHeight: 0.8,
+                    background: 'linear-gradient(to bottom, var(--text-primary) 30%, transparent 120%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    opacity: 0.9,
+                    position: 'relative'
+                }}>
+                    AXIOM
+                    <span style={{
+                        color: 'var(--color-trust)',
+                        WebkitTextFillColor: 'var(--color-trust)',
+                        textShadow: '0 0 60px rgba(45, 212, 191, 0.4)'
+                    }}>
+                        AI
+                    </span>
+                </div>
+            </div>
+
         </div>
     );
 };
