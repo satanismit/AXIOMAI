@@ -10,6 +10,8 @@ import Home from './pages/Home';
 import QueryPage from './pages/QueryPage';
 import System from './pages/System';
 import Trust from './pages/Trust';
+import CopilotUpload from './pages/CopilotUpload';
+import CopilotChat from './pages/CopilotChat';
 
 // Global System Components
 import TargetCursor from './components/system/TargetCursor';
@@ -30,6 +32,8 @@ function App() {
                     <Route path="/query" element={<QueryPage />} />
                     <Route path="/system" element={<System />} />
                     <Route path="/trust" element={<Trust />} />
+                    <Route path="/copilot" element={<CopilotUpload />} />
+                    <Route path="/copilot/chat" element={<CopilotChat />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>

@@ -1,22 +1,21 @@
-"""
-AXIOMAI API — FastAPI entry point.
-
-Run with:
-    uvicorn app.main:app --reload
-"""
-import sys
-
-# Fix encoding for Windows console
-if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding="utf-8")
-
 from fastapi import FastAPI
-from app.api.routes import router
+from fastapi.staticfiles import StaticFiles
+from app.api.routes import router as api_router
+import os
 
-app = FastAPI(
-    title="AXIOMAI API",
-    description="Production-oriented Agentic RAG System",
-    version="1.0.0",
-)
+app = FastAPI(title="PaperMind AI", description="Intelligent Research Copilot API")
 
-app.include_router(router)
+# Serve generated audio files directly so the UI can playback the URLs
+os.makedirs("app/static/audio", exist_ok=True)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Connect our API router containing the endpoints
+app.include_router(api_router, prefix="/api")
+
+@app.get("/")
+def read_root():
+    return {"message": "PaperMind AI Backend is running!"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "PaperMind AI API is alive."}

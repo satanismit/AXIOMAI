@@ -19,6 +19,7 @@ const Layout = () => {
                     <NavLink to="/query" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>[01] QUERY</NavLink>
                     <NavLink to="/system" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>[02] SYSTEM</NavLink>
                     <NavLink to="/trust" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>[03] TRUST</NavLink>
+                    <NavLink to="/copilot" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>[04] COPILOT</NavLink>
                 </nav>
 
                 <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

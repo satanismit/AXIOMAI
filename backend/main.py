@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/api/v1")
+app.include_router(router, prefix="/api")
 
 def main():
     # Fix for Windows OSError 1455: Disable reload/multiprocessing which duplicates memory
