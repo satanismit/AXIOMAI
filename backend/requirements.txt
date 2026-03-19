@@ -21,6 +21,8 @@ redis
 celery
 coqui-tts
 tavily-python
+langchain-tavily
+langchain-ollama
 langgraph
 llama-index-llms-langchain
 llama-index-llms-gemini

@@ -8,7 +8,7 @@ class Config:
     PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
     EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "BAAI/bge-large-en-v1.5")
     TOP_K = int(os.getenv("TOP_K", "5"))
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "gemini-1.5-flash")
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "llama3-chatqa:8b")
 
 settings = Config()

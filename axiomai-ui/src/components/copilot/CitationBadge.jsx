@@ -1,6 +1,9 @@
 import React from 'react';
 
 const CitationBadge = ({ source }) => {
+    // Hidden completely from UI per user request
+    return null;
+
     const isWeb = source.type === 'web';
 
     return (

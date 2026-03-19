@@ -111,6 +111,11 @@ const TargetCursor = ({
         const tickerFn = () => {
             if (!cursorRef.current) return;
 
+            // DOM MUTATION SAFETY CHECK: If the target we are hovering over gets unmounted by React
+            if (activeTarget && !document.body.contains(activeTarget)) {
+                if (currentLeaveHandler) currentLeaveHandler();
+            }
+
             const cursorX = gsap.getProperty(cursorRef.current, 'x');
             const cursorY = gsap.getProperty(cursorRef.current, 'y');
 

@@ -7,6 +7,7 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
     ]);
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
+    const [playingAudioMsgIndex, setPlayingAudioMsgIndex] = useState(null);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -49,26 +50,38 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
         }
     };
 
-    const handleListen = async (text) => {
-        if(!onPlayAudio) return;
-        
-        try {
-            onPlayAudio({ status: 'loading', text });
-            const res = await fetch('http://localhost:8000/api/tts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            });
-            const data = await res.json();
-            if (data.status === 'success') {
-                onPlayAudio({ status: 'ready', url: `http://localhost:8000${data.audio_url}`, text });
-            } else {
-                console.error("TTS Error:", data.message);
-                onPlayAudio(null);
+    const handleListen = (text, idx) => {
+        if ('speechSynthesis' in window) {
+            // Stop if already playing this message
+            if (playingAudioMsgIndex === idx && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                setPlayingAudioMsgIndex(null);
+                return;
             }
-        } catch(e) {
-             console.error("Network Error during TTS:", e);
-             onPlayAudio(null);
+
+            // Clear any previously playing audio queue to avoid overlap
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.95; // Slightly slower for better academic pacing
+            utterance.pitch = 1.0;
+            
+            // Auto-select a clear English voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang.includes('en-'));
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+
+            // Reset state when audio finishes naturally or gets cancelled
+            utterance.onend = () => setPlayingAudioMsgIndex(null);
+            utterance.onerror = () => setPlayingAudioMsgIndex(null);
+
+            // Start playing the audio instantly
+            setPlayingAudioMsgIndex(idx);
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert("Sorry, your browser does not support native text-to-speech.");
         }
     };
 
@@ -111,10 +124,10 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
                                         <CitationBadge key={s_idx} source={src} />
                                     ))}
                                     
-                                    <button onClick={() => handleListen(msg.content)} className="mono" style={{
-                                        background: 'transparent',
-                                        border: '1px solid var(--text-muted)',
-                                        color: 'var(--text-secondary)',
+                                    <button onClick={() => handleListen(msg.content, idx)} className="mono" style={{
+                                        background: playingAudioMsgIndex === idx ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+                                        border: `1px solid ${playingAudioMsgIndex === idx ? 'rgba(239, 68, 68, 0.3)' : 'var(--text-muted)'}`,
+                                        color: playingAudioMsgIndex === idx ? '#EF4444' : 'var(--text-secondary)',
                                         padding: '0.3rem 0.6rem',
                                         borderRadius: '6px',
                                         cursor: 'pointer',
@@ -124,8 +137,17 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
                                         gap: '0.4rem',
                                         transition: 'all 0.2s'
                                     }}>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                                        LISTEN AUDIO
+                                        {playingAudioMsgIndex === idx ? (
+                                            <>
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                                                STOP AUDIO
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                                                LISTEN AUDIO
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             )}

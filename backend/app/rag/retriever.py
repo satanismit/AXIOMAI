@@ -1,65 +1,51 @@
-import os
+"""
+RAG Retriever — LlamaIndex query engine over Qdrant with Ollama LLM.
+Uses shared model cache from app.core.models.
+"""
+
+import logging
+
 from llama_index.core import VectorStoreIndex, Settings
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.langchain import LangChainLLM
-from langchain_google_genai import ChatGoogleGenerativeAI
 
-# Ensure your GEMINI_API_KEY or GROQ_API_KEY is in your .env file
-# Here we'll default to Gemini via litellm (gemini/gemini-1.5-flash)
+from app.core.models import (
+    get_embed_model, get_llm,
+    QDRANT_HOST, QDRANT_PORT, COLLECTION_NAME, TOP_K,
+)
 
-def setup_rag_settings():
-    # Setup embedding model
-    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
-    Settings.embed_model = embed_model
-    
-    # Using litellm to route to the gemini free tier
-    try:
-        from dotenv import load_dotenv
-        import os
-        load_dotenv()
-        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        lc_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key)
-        Settings.llm = LangChainLLM(llm=lc_llm)
-    except Exception as e:
-        print("Warning: Gemini initialization failed. Check your API keys.", e)
+logger = logging.getLogger(__name__)
 
-def get_query_engine(collection_name: str = "papermind_papers", top_k: int = 3):
-    setup_rag_settings()
-    
-    client = QdrantClient(host="localhost", port=6333)
+
+def get_query_engine(collection_name: str = COLLECTION_NAME, top_k: int = TOP_K):
+    Settings.embed_model = get_embed_model()
+    Settings.llm = get_llm()
+
+    client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
     vector_store = QdrantVectorStore(client=client, collection_name=collection_name)
-    
-    # Load index from existing Qdrant vector store
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
-    
-    # Create the query engine
-    query_engine = index.as_query_engine(similarity_top_k=top_k)
-    return query_engine
+    return index.as_query_engine(similarity_top_k=top_k)
+
 
 def answer_query(query: str):
+    logger.info(f"[RAG] Query: {query}")
     engine = get_query_engine()
     response = engine.query(query)
-    
-    # Extract source context safely
+
     sources = []
     if hasattr(response, "source_nodes"):
         for node in response.source_nodes:
-            sources.append(node.text)
-            
-    return {
-        "answer": str(response),
-        "sources": sources
-    }
+            sources.append(node.text[:300])
+
+    logger.info(f"[RAG] ✅ Answer generated. Sources: {len(sources)}")
+    return {"answer": str(response), "sources": sources}
+
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1:
         q = " ".join(sys.argv[1:])
-        print(f"Thinking about: '{q}'...")
         res = answer_query(q)
-        print(f"\nAnswer:\n{res['answer']}\n")
-        print(f"Sources used: {len(res['sources'])}")
+        print(f"\nAnswer:\n{res['answer']}\nSources: {len(res['sources'])}")
     else:
-        print("Usage: python retriever.py '<your question>'")
+        print("Usage: python retriever.py '<query>'")
