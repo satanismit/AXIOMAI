@@ -3,41 +3,53 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Layout & Context
 import Layout from './components/Layout';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
-import Splash from './pages/Splash';
+import PublicHomePage from './pages/PublicHomePage';
 import Home from './pages/Home';
-import QueryPage from './pages/QueryPage';
-import System from './pages/System';
-import Trust from './pages/Trust';
 import CopilotUpload from './pages/CopilotUpload';
 import CopilotChat from './pages/CopilotChat';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 // Global System Components
 import TargetCursor from './components/system/TargetCursor';
 
 function App() {
     return (
-        <>
-            <TargetCursor
-                spinDuration={4}
-                hideDefaultCursor={true}
-                parallaxOn={true}
-                hoverDuration={0.3}
-            />
-            <Routes>
-                <Route path="/" element={<Splash />} />
-                <Route element={<Layout />}>
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/query" element={<QueryPage />} />
-                    <Route path="/system" element={<System />} />
-                    <Route path="/trust" element={<Trust />} />
-                    <Route path="/copilot" element={<CopilotUpload />} />
-                    <Route path="/copilot/chat" element={<CopilotChat />} />
-                </Route>
-                <Route path="*" element={<Navigate to="/home" replace />} />
-            </Routes>
-        </>
+        <AuthProvider>
+            <>
+                <TargetCursor
+                    spinDuration={4}
+                    hideDefaultCursor={true}
+                    parallaxOn={true}
+                    hoverDuration={0.3}
+                />
+                <Routes>
+                    {/* Public Landing Page */}
+                    <Route path="/" element={<PublicHomePage />} />
+
+                    {/* Public auth routes */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+
+                    {/* Protected dashboard routes nested under /dashboard */}
+                    <Route path="/dashboard" element={
+                        <ProtectedRoute>
+                            <Layout />
+                        </ProtectedRoute>
+                    }>
+                        <Route path="home" element={<Home />} />
+                        <Route path="copilot" element={<CopilotUpload />} />
+                        <Route path="copilot/chat" element={<CopilotChat />} />
+                    </Route>
+
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+            </>
+        </AuthProvider>
     );
 }
 

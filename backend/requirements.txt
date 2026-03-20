@@ -26,3 +26,6 @@ langchain-ollama
 langgraph
 llama-index-llms-langchain
 llama-index-llms-gemini
+# Auth
+python-jose[cryptography]
+httpx
