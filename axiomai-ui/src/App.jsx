@@ -13,6 +13,7 @@ import CopilotUpload from './pages/CopilotUpload';
 import CopilotChat from './pages/CopilotChat';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Profile from './pages/Profile';
 
 // Global System Components
 import TargetCursor from './components/system/TargetCursor';
@@ -44,6 +45,7 @@ function App() {
                         <Route path="home" element={<Home />} />
                         <Route path="copilot" element={<CopilotUpload />} />
                         <Route path="copilot/chat" element={<CopilotChat />} />
+                        <Route path="profile" element={<Profile />} />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/login" replace />} />

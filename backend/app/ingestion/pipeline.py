@@ -59,7 +59,7 @@ def split_into_sections(text: str):
         })
     return sections
 
-def ingest_pdf(pdf_path: str, collection_name: str = "papermind_papers"):
+def ingest_pdf(pdf_path: str, document_id: str, user_id: str, collection_name: str = "papermind_papers"):
     """Index a PDF into Qdrant using strict semantic chunking and clean text."""
     logger.info(f"[INGEST] Loading {pdf_path}...")
     
@@ -89,7 +89,11 @@ def ingest_pdf(pdf_path: str, collection_name: str = "papermind_papers"):
         cleaned_documents.append(
             Document(
                 text=sec["text"],
-                metadata={"section": sec["section"]}
+                metadata={
+                    "section": sec["section"],
+                    "document_id": document_id,
+                    "user_id": user_id
+                }
             )
         )
     
@@ -121,7 +125,7 @@ def ingest_pdf(pdf_path: str, collection_name: str = "papermind_papers"):
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1:
-        ingest_pdf(sys.argv[1])
+    if len(sys.argv) > 3:
+        ingest_pdf(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
-        print("Usage: python pipeline.py <path_to_pdf>")
+        print("Usage: python pipeline.py <path_to_pdf> <document_id> <user_id>")

@@ -13,22 +13,36 @@ logger = logging.getLogger(__name__)
 
 SUMMARY_PROMPT = """You are an expert AI Research Assistant.
 
-Summarize the given research paper into EXACTLY 6 sections:
+Summarize the given research paper into EXACTLY 6 sections using clean Markdown formatting.
 
-1. **Research Contribution**
-2. **Methodology Overview**
-3. **Dataset / Benchmark**
-4. **Performance Highlights**
-5. **Limitations**
-6. **Future Scope**
+Use this EXACT format:
+
+## Research Contribution
+(2 sentences max)
+
+## Methodology Overview
+(2 sentences max)
+
+## Dataset / Benchmark
+(2 sentences max)
+
+## Performance Highlights
+(2 sentences max)
+
+## Limitations
+(2 sentences max)
+
+## Future Scope
+(2 sentences max)
 
 Rules:
-- Maximum 2 sentences per section
+- Use **bold** for key terms
+- Use bullet points where appropriate
 - Total response under 200 words
 - Do NOT repeat information
 - Do NOT hallucinate
-- If missing info, write: Not explicitly mentioned
-- Output only final structured answer
+- If missing info, write: *Not explicitly mentioned*
+- Output ONLY clean Markdown, NO HTML tags whatsoever
 - No explanations, no extra text"""
 
 

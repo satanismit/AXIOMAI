@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import CitationBadge from './CitationBadge';
+import { supabase } from '../../lib/supabaseClient';
+import StructuredMessageRenderer from './StructuredMessageRenderer';
 
-const ChatWindow = ({ documentName, onPlayAudio }) => {
+const ChatWindow = ({ documentId, documentName, onPlayAudio }) => {
     const [messages, setMessages] = useState([
         { role: 'system', content: `RESEARCH COPILOT ONLINE. Analyzing context for: ${documentName || 'Unknown Document'}`, isWebSearch: false, sources: [] }
     ]);
@@ -18,6 +20,40 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
         scrollToBottom();
     }, [messages]);
 
+    const handleSummaryRequest = async () => {
+        const userMsg = "Please generate a comprehensive summary of this document.";
+        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+        setIsTyping(true);
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
+            const res = await fetch(`http://localhost:8000/api/summary?file_name=${encodeURIComponent(documentName)}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!res.ok) throw new Error("Backend connection failed.");
+            const data = await res.json();
+            
+            if (data.error) throw new Error(data.error);
+
+            setMessages(prev => [...prev, { 
+                role: 'assistant', 
+                content: data.summary,
+                isWebSearch: false,
+                sources: []
+            }]);
+        } catch (error) {
+            setMessages(prev => [...prev, { role: 'assistant', content: `[ERROR] ${error.message}` }]);
+        } finally {
+            setIsTyping(false);
+        }
+    };
+
     const handleSend = async () => {
         if (!input.trim()) return;
         const userMsg = input;
@@ -27,11 +63,15 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
         setIsTyping(true);
 
         try {
-            // Using default 8000 for FastAPI local server
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
             const res = await fetch('http://localhost:8000/api/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: userMsg })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ query: userMsg, document_id: documentId })
             });
 
             if (!res.ok) throw new Error("Backend connection failed.");
@@ -86,7 +126,7 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
     };
 
     return (
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '600px', padding: '1.5rem', position: 'relative' }}>
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 150px)', padding: '1.5rem', position: 'relative' }}>
             
             {/* Messages Area */}
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem' }}>
@@ -115,7 +155,11 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
                                 </div>
                             )}
                             
-                            <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+                            {msg.role === 'assistant' ? (
+                                <StructuredMessageRenderer content={msg.content} />
+                            ) : (
+                                <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+                            )}
                             
                             {/* Sources and Features under assistant messages */}
                             {msg.role === 'assistant' && msg.content && msg.role !== 'system' && (
@@ -164,8 +208,36 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
             </div>
 
             {/* Input Area */}
-            <div style={{ marginTop: '1rem', position: 'relative' }}>
-                <input 
+            <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button 
+                        onClick={handleSummaryRequest}
+                        disabled={isTyping}
+                        className="mono"
+                        style={{
+                            background: 'var(--input-bg)',
+                            color: 'var(--text-secondary)',
+                            border: '1px solid var(--border-subtle)',
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '4px',
+                            cursor: isTyping ? 'not-allowed' : 'pointer',
+                            fontSize: '0.75rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            transition: 'all 0.2s',
+                            letterSpacing: '0.5px'
+                        }}
+                        onMouseOver={(e) => { if (!isTyping) { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--text-primary)'; } }}
+                        onMouseOut={(e) => { if (!isTyping) { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'var(--border-subtle)'; } }}
+                    >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>
+                        GENERATE SUMMARY
+                    </button>
+                </div>
+                
+                <div style={{ position: 'relative' }}>
+                    <input 
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -203,6 +275,7 @@ const ChatWindow = ({ documentName, onPlayAudio }) => {
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
+                </div>
             </div>
             
         </div>

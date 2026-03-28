@@ -1,18 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UploadDropzone from '../components/copilot/UploadDropzone';
+import { fetchWithAuth } from '../lib/api';
 
 const CopilotUpload = () => {
     const navigate = useNavigate();
-    const [papers, setPapers] = useState([
-        { id: 1, name: 'Sample_Research_Paper.pdf', status: 'Indexed' }
-    ]);
+    const [papers, setPapers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const handleUploadSuccess = (newPaper) => {
-        setPapers(prev => [
-            { id: Date.now(), name: newPaper.name, status: newPaper.status },
-            ...prev
-        ]);
+    const fetchDocuments = async () => {
+        try {
+            const res = await fetchWithAuth('/documents');
+            const data = await res.json();
+            setPapers(data.map(doc => ({
+                id: doc.id,
+                name: doc.file_name,
+                status: doc.upload_status.charAt(0).toUpperCase() + doc.upload_status.slice(1)
+            })));
+        } catch (err) {
+            console.error("Failed to fetch documents", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDocuments();
+    }, []);
+
+    const handleUploadSuccess = () => {
+        fetchDocuments();
     };
 
     return (
@@ -57,7 +74,7 @@ const CopilotUpload = () => {
                             </div>
                             
                             <button 
-                                onClick={() => navigate(`/copilot/chat?doc=${encodeURIComponent(paper.name)}`)}
+                                onClick={() => navigate(`/dashboard/copilot/chat?doc_id=${paper.id}&doc_name=${encodeURIComponent(paper.name)}`)}
                                 className="mono"
                                 style={{
                                     background: 'var(--color-intelligence-dim)',
@@ -86,7 +103,7 @@ const CopilotUpload = () => {
                     
                     {papers.length === 0 && (
                         <div className="mono" style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '3rem', border: '1px dashed var(--border-subtle)', borderRadius: '12px' }}>
-                            NO DOCUMENTS INDEXED YET. 
+                            {loading ? "LOADING DOCUMENTS..." : "NO DOCUMENTS INDEXED YET."}
                         </div>
                     )}
                 </div>

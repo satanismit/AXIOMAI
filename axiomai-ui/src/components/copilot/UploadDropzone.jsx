@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { fetchWithAuth } from '../../lib/api';
 
 const UploadDropzone = ({ onUploadSuccess }) => {
     const [isDragging, setIsDragging] = useState(false);
@@ -45,15 +46,12 @@ const UploadDropzone = ({ onUploadSuccess }) => {
         formData.append('file', file);
 
         try {
-            // Assuming default FastAPI port for backend requests
-            const response = await fetch('http://localhost:8000/api/upload', {
+            const response = await fetchWithAuth('/documents/upload', {
                 method: 'POST',
                 body: formData,
             });
             
-            if (!response.ok) throw new Error("Upload failed. Is backend running?");
-            
-            await response.json();
+            const data = await response.json();
             onUploadSuccess({ name: file.name, status: 'Indexed' });
         } catch (err) {
             setError(err.message || 'Failed to upload paper');

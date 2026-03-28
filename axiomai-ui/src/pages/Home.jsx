@@ -63,7 +63,7 @@ const Home = () => {
 
             <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
                 <button
-                    onClick={() => navigate('/query')}
+                    onClick={() => navigate('/dashboard/copilot')}
                     className="mono"
                     style={{
                         padding: '0.75rem 1.5rem',
@@ -73,10 +73,10 @@ const Home = () => {
                         border: '1px solid var(--color-trust)'
                     }}
                 >
-                    [ INTIALIZE_QUERY ]
+                    [ OPEN_COPILOT ]
                 </button>
                 <button
-                    onClick={() => navigate('/system')}
+                    onClick={() => navigate('/dashboard/home')}
                     className="mono"
                     style={{
                         padding: '0.75rem 1.5rem',
@@ -88,7 +88,7 @@ const Home = () => {
                     onMouseOver={(e) => { e.target.style.borderColor = 'var(--text-primary)'; e.target.style.background = 'var(--bg-tertiary)'; }}
                     onMouseOut={(e) => { e.target.style.borderColor = 'var(--border-subtle)'; e.target.style.background = 'var(--bg-secondary)'; }}
                 >
-                    [ READ_SYSTEM_DOCS ]
+                    [ VIEW_DASHBOARD ]
                 </button>
             </div>
 

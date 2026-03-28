@@ -9,14 +9,17 @@ from app.agents.router_agent import low_latency_router
 from app.summary.engine import generate_structured_summary
 from app.tts.service import generate_audio
 from app.auth.verify_token import get_current_user
+from app.api.documents import router as documents_router
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+router.include_router(documents_router, prefix="/documents", tags=["documents"])
 
 
 class ChatRequest(BaseModel):
     query: str
+    document_id: str
 
 
 class TTSRequest(BaseModel):
@@ -50,7 +53,7 @@ async def chat_interaction(
 ):
     """RAG/web chat endpoint. Requires valid Supabase JWT."""
     try:
-        response = low_latency_router(req.query)
+        response = low_latency_router(req.query, req.document_id, current_user["user_id"])
         return response
     except Exception as e:
         logger.error(f"[CHAT ERROR] {e}")

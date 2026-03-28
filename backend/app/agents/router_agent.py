@@ -34,6 +34,8 @@ Answer the question using ONLY the provided context.
 
 Rules:
 - Give a clear, complete explanation like a professor
+- Format your response using clean Markdown (## headings, **bold**, bullet points, `code`)
+- Do NOT output any HTML tags
 - If partial info exists, answer as much as possible
 - If numerical values (scores, dimensions, results) are present, extract them EXACTLY
 - Do NOT approximate or guess numbers
@@ -47,22 +49,32 @@ Context:
 Question:
 {query}
 
-Answer:
+Answer (in Markdown):
 """
 
 def _is_greeting(query: str) -> bool:
     return bool(GREETING_PATTERNS.match(query.strip()))
 
 
-def get_retriever():
-    """Build retriever from Qdrant with cached models."""
+def get_retriever(document_id: str = None, user_id: str = None):
+    """Build retriever from Qdrant with cached models and metadata filters."""
     Settings.embed_model = get_embed_model()
     Settings.llm = get_llm()
 
     client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
     vector_store = QdrantVectorStore(client=client, collection_name=COLLECTION_NAME)
+    
+    from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
+    filters = []
+    if document_id:
+        filters.append(ExactMatchFilter(key="document_id", value=document_id))
+    if user_id:
+        filters.append(ExactMatchFilter(key="user_id", value=user_id))
+        
+    metadata_filters = MetadataFilters(filters=filters) if filters else None
+
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
-    return index.as_retriever(similarity_top_k=5)
+    return index.as_retriever(similarity_top_k=5, filters=metadata_filters)
 
 
 def _call_llm_with_context(context_text: str, query: str) -> str:
@@ -80,12 +92,12 @@ def _call_llm_with_context(context_text: str, query: str) -> str:
         logger.info(f"[LLM DEBUG] Raw LLM response: {repr(answer)}")
         
         # Retry mechanism for empty response
-        if not answer or len(answer) < 10:
-            logger.warning("[LLM FAILURE] Empty or very short response. Retrying LLM call...")
+        if not answer:
+            logger.warning("[LLM FAILURE] Empty response. Retrying LLM call...")
             response = llm.complete(prompt)
             answer = response.text.strip() if hasattr(response, 'text') else str(response).strip()
             
-            if not answer or len(answer) < 10:
+            if not answer:
                 logger.error("[LLM ERROR] LLM repeatedly failed to generate content.")
                 return "Answer not found in the provided document."
 
@@ -101,7 +113,7 @@ def _validate_post_answer(answer: str, context: str) -> bool:
     return True
 
 
-def low_latency_router(query: str) -> dict:
+def low_latency_router(query: str, document_id: str = None, user_id: str = None) -> dict:
     """Answer query strictly from paper context."""
     query = query.lower().strip()
     logger.info(f"[QUERY] Received: {query}")
@@ -119,7 +131,7 @@ def low_latency_router(query: str) -> dict:
         if not client.collection_exists(COLLECTION_NAME):
             raise Exception(f"Collection not found. Please re-ingest PDF.\n\nDelete old collection:\ncurl -X DELETE http://{QDRANT_HOST}:{QDRANT_PORT}/collections/{COLLECTION_NAME}\n\nThen re-upload PDF.")
 
-        retriever = get_retriever()
+        retriever = get_retriever(document_id, user_id)
         
         # ── MULTI-QUERY RETRIEVAL ──
         queries = [
@@ -135,6 +147,14 @@ def low_latency_router(query: str) -> dict:
         for q in queries:
             nodes = retriever.retrieve(q)
             all_nodes.extend(nodes)
+
+        # ── FALLBACK: if metadata-filtered search found nothing, retry without filters ──
+        if not all_nodes and (document_id or user_id):
+            logger.warning("[RETRIEVAL] Metadata-filtered search returned 0 nodes. Falling back to unfiltered retrieval.")
+            retriever = get_retriever()  # no filters
+            for q in queries:
+                nodes = retriever.retrieve(q)
+                all_nodes.extend(nodes)
 
         # Remove duplicates
         unique_nodes = {}

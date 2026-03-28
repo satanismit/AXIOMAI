@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
 const InsightCard = ({ title, content, isExpanded, onToggle }) => (
     <div style={{
@@ -46,8 +47,13 @@ const SummaryPanel = ({ documentName }) => {
         setIsLoading(true);
         setError(null);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
             const res = await fetch(`http://localhost:8000/api/summary?file_name=${encodeURIComponent(documentName)}`, {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
             });
             if (!res.ok) throw new Error("Backend connection failed.");
             
