@@ -34,3 +34,9 @@ qdrant_storage/
 Thumbs.db
 .vscode/
 .idea/
+
+# Ignore main myenv
+myenv/
+*.log
+vite.config.js.timestamp-*
+
