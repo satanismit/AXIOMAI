@@ -30,7 +30,7 @@ const Layout = () => {
         <div className="app-layer">
             <header className="nav-header">
                 <div className="logo-group">
-                    <NavLink to="/home" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <NavLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {/* We use mix-blend-mode to drop black background if any */}
                         <img src="/logo.png" alt="AXIOMAI Logo" style={{ height: '24px', mixBlendMode: 'lighten' }} />
                         <span className="logo-text" style={{ color: 'var(--text-primary)', fontSize: '1.25rem' }}>AXIOMAI</span>
@@ -38,8 +38,10 @@ const Layout = () => {
                 </div>
 
                 <nav className="nav-links mono">
-                    <NavLink to="/dashboard/home" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}> HOME</NavLink>
+                    <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} end> HOME</NavLink>
                     <NavLink to="/dashboard/copilot" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}> COPILOT</NavLink>
+                    <NavLink to="/dashboard/compare" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}> COMPARE</NavLink>
+                    <NavLink to="/dashboard/ideas" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}> IDEAS</NavLink>
                 </nav>
 
                 <div className="nav-user-badge" ref={dropdownRef} style={{ position: 'relative' }}>

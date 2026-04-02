@@ -14,6 +14,8 @@ import CopilotChat from './pages/CopilotChat';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
+import ComparePapers from './pages/ComparePapers';
+import IdeaGenerator from './pages/IdeaGenerator';
 
 // Global System Components
 import TargetCursor from './components/system/TargetCursor';
@@ -42,10 +44,13 @@ function App() {
                             <Layout />
                         </ProtectedRoute>
                     }>
-                        <Route path="home" element={<Home />} />
+                        <Route index element={<Navigate to="copilot" replace />} />
+                        <Route path="home" element={<Navigate to="/" replace />} />
                         <Route path="copilot" element={<CopilotUpload />} />
                         <Route path="copilot/chat" element={<CopilotChat />} />
                         <Route path="profile" element={<Profile />} />
+                        <Route path="compare" element={<ComparePapers />} />
+                        <Route path="ideas" element={<IdeaGenerator />} />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/login" replace />} />

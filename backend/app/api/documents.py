@@ -146,7 +146,7 @@ async def get_document_url(doc_id: str, current_user: dict = Depends(get_current
 
 @router.delete("/{doc_id}")
 async def delete_document(doc_id: str, current_user: dict = Depends(get_current_user)):
-    """Delete a document from DB and storage."""
+    """Delete a document from DB, storage, and Qdrant vectors."""
     user_id = current_user["user_id"]
     try:
         # Get storage path
@@ -156,10 +156,34 @@ async def delete_document(doc_id: str, current_user: dict = Depends(get_current_
         
         storage_path = res.data[0]["storage_path"]
 
-        # Delete from storage
-        supabase.storage.from_("research-documents").remove([storage_path])
+        # 1. Delete vectors from Qdrant
+        try:
+            from qdrant_client import QdrantClient
+            from qdrant_client.models import Filter, FieldCondition, MatchValue
+            qdrant_host = os.getenv("QDRANT_HOST", "localhost")
+            qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
+            collection_name = os.getenv("QDRANT_COLLECTION_NAME", "papermind_papers")
 
-        # Delete from DB
+            qdrant_client = QdrantClient(host=qdrant_host, port=qdrant_port)
+            qdrant_client.delete(
+                collection_name=collection_name,
+                points_selector=Filter(
+                    must=[
+                        FieldCondition(key="document_id", match=MatchValue(value=doc_id))
+                    ]
+                ),
+            )
+            logger.info(f"[DELETE] Qdrant vectors removed for doc_id={doc_id}")
+        except Exception as qdrant_err:
+            logger.warning(f"[DELETE] Qdrant cleanup failed (non-fatal): {qdrant_err}")
+
+        # 2. Delete from Supabase Storage
+        try:
+            supabase.storage.from_("research-documents").remove([storage_path])
+        except Exception as storage_err:
+            logger.warning(f"[DELETE] Storage cleanup failed (non-fatal): {storage_err}")
+
+        # 3. Delete from Supabase DB
         supabase.table("documents").delete().eq("id", doc_id).eq("user_id", user_id).execute()
         
         return {"message": "Document deleted successfully"}

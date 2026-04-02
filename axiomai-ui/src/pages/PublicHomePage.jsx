@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const PublicHomePage = () => {
-    const { session, loading } = useAuth();
+    const { session, user, loading, signOut } = useAuth();
+    const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
     const [scrollProgress, setScrollProgress] = useState(0);
     const [time, setTime] = useState('');
@@ -76,10 +77,7 @@ const PublicHomePage = () => {
     const [openFaq, setOpenFaq] = useState(null);
     const toggleFaq = (index) => setOpenFaq(openFaq === index ? null : index);
 
-    // Redirect logged-in users directly to dashboard
-    if (!loading && session) {
-        return <Navigate to="/dashboard/home" replace />;
-    }
+    // No redirect — same home page for logged-in and logged-out users
 
     if (loading) {
         return <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}></div>;
@@ -299,23 +297,48 @@ const PublicHomePage = () => {
                 </div>
 
                 <div className="mono" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <Link to="/login" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.85rem', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color = 'var(--text-primary)'} onMouseOut={(e) => e.target.style.color = 'var(--text-secondary)'}>
-                        [LOGIN]
-                    </Link>
-                    <Link to="/signup" style={{ 
-                        color: '#000', 
-                        background: 'var(--color-trust)', 
-                        textDecoration: 'none', 
-                        fontSize: '0.85rem',
-                        padding: '0.5rem 1.25rem',
-                        borderRadius: '4px',
-                        fontWeight: 600,
-                        transition: 'box-shadow 0.2s'
-                    }}
-                    onMouseOver={(e) => e.target.style.boxShadow = '0 0 15px rgba(45, 212, 191, 0.4)'}
-                    onMouseOut={(e) => e.target.style.boxShadow = 'none'}>
-                        [SIGNUP]
-                    </Link>
+                    {session ? (
+                        <>
+                            <Link to="/dashboard/copilot" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.85rem', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color = 'var(--text-primary)'} onMouseOut={(e) => e.target.style.color = 'var(--text-secondary)'}>
+                                [DASHBOARD]
+                            </Link>
+                            <button onClick={async () => { await signOut(); navigate('/'); }} className="mono" style={{ 
+                                color: '#000', 
+                                background: 'var(--color-trust)', 
+                                border: 'none',
+                                fontSize: '0.85rem',
+                                padding: '0.5rem 1.25rem',
+                                borderRadius: '4px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'box-shadow 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.boxShadow = '0 0 15px rgba(45, 212, 191, 0.4)'}
+                            onMouseOut={(e) => e.target.style.boxShadow = 'none'}>
+                                [LOGOUT]
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/login" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.85rem', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color = 'var(--text-primary)'} onMouseOut={(e) => e.target.style.color = 'var(--text-secondary)'}>
+                                [LOGIN]
+                            </Link>
+                            <Link to="/signup" style={{ 
+                                color: '#000', 
+                                background: 'var(--color-trust)', 
+                                textDecoration: 'none', 
+                                fontSize: '0.85rem',
+                                padding: '0.5rem 1.25rem',
+                                borderRadius: '4px',
+                                fontWeight: 600,
+                                transition: 'box-shadow 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.boxShadow = '0 0 15px rgba(45, 212, 191, 0.4)'}
+                            onMouseOut={(e) => e.target.style.boxShadow = 'none'}>
+                                [SIGNUP]
+                            </Link>
+                        </>
+                    )}
                 </div>
             </header>
 
@@ -387,7 +410,7 @@ const PublicHomePage = () => {
                 </div>
 
                 <div className="hero-cta-enter" style={{ display: 'flex', gap: '1rem', zIndex: 1, position: 'relative' }}>
-                    <Link to="/signup" className="mono btn-primary" style={{
+                    <Link to={session ? "/dashboard/copilot" : "/signup"} className="mono btn-primary" style={{
                         padding: '0.875rem 2rem',
                         background: 'var(--color-trust)',
                         color: '#000',
@@ -396,7 +419,7 @@ const PublicHomePage = () => {
                         borderRadius: '4px',
                         fontWeight: 600
                     }}>
-                        GET STARTED →
+                        {session ? 'OPEN COPILOT →' : 'GET STARTED →'}
                     </Link>
                     <a href="#features" className="mono btn-outline" style={{
                         padding: '0.875rem 2rem',

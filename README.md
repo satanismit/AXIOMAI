@@ -14,6 +14,8 @@ AXIOM AI is a sophisticated Research Copilot and Knowledge Management platform d
 - **Structured Rendering**: AI responses are dynamically formatted with markdown-to-Tailwind parsers, providing beautifully structured lists, code blocks, and citations without visual clutter.
 - **Quick Summarization**: Generate instant, structured overviews of entire documents directly from the chat interface.
 - **Audio Synthesis**: High-quality Text-to-Speech (TTS) capabilities built directly into individual copilot messages.
+- **Research Paper Comparison**: Select 2–5 papers and generate structured side-by-side comparisons covering methodology, architecture, performance, and key insights.
+- **Startup Idea Generator**: Transform research insights into actionable startup concepts with structured idea cards (problem, solution, target users, tech stack).
 - **SaaS Identity Management**: Complete profile lifecycle, authentication, and JWT authorization powered by Supabase.
 
 ---
@@ -78,6 +80,78 @@ Visit `http://localhost:5173` to interact with the AXIOM AI dashboard.
 
 ---
 
+## ✨ New Feature: Research Paper Comparison
+
+### Overview
+Compare multiple research papers and generate structured, LLM-powered insights without re-processing any documents.
+
+### How It Works
+1. Navigate to **COMPARE** in the dashboard navbar
+2. Select 2–5 uploaded & indexed papers
+3. Click **COMPARE** — the system retrieves stored vectors for each paper
+4. A structured comparison prompt is sent to the LLM
+5. Results render as a side-by-side table + insight cards
+
+### API Endpoint
+```
+POST /api/compare
+Body: { "paper_ids": ["id1", "id2"] }
+```
+
+### Output Structure
+- **Methodology** comparison
+- **Dataset / Benchmark** comparison
+- **Architecture** differences
+- **Performance** metrics comparison
+- **Strengths & Weaknesses** per paper
+- **Key Insights** (cross-paper observations)
+
+### Tech Used
+- LlamaIndex (vector retrieval with metadata filters)
+- Qdrant (read-only vector search per `document_id`)
+- Ollama / LangChain (LLM generation)
+- Supabase (paper metadata + auth)
+
+### Notes
+- Uses already-indexed data — no re-ingestion required
+- Multi-user isolated: only the logged-in user's papers are accessible
+- Maximum 5 papers per comparison to stay within LLM context limits
+---
+
+## 💡 New Feature: Startup Idea Generator
+
+### Overview
+Generate innovative, practical startup ideas based on your research paper insights.
+
+### How It Works
+1. Navigate to **IDEAS** in the dashboard navbar
+2. Select 1–5 indexed research papers
+3. Click **GENERATE IDEAS** — the system extracts key themes and insights
+4. LLM generates 3–5 structured startup concepts
+5. Results render as detailed idea cards
+
+### API Endpoint
+```
+POST /api/generate-ideas
+Body: { "paper_ids": ["id1", "id2"] }
+```
+
+### Output per Idea
+- **Title** — Catchy startup concept name
+- **Description** — Elevator pitch
+- **Problem** — What real-world problem it addresses
+- **Solution** — How the product works
+- **Target Users** — Who benefits
+- **Tech Stack** — Suggested technologies
+
+### Tech Used
+- LlamaIndex (vector retrieval with metadata filters)
+- Qdrant (read-only vector search per `document_id`)
+- Ollama / LangChain (LLM generation)
+- Supabase (paper metadata + auth)
+
+---
+
 ## 🐛 Recent Bug Fixes
 
 | Issue | Root Cause | Fix |
@@ -89,6 +163,8 @@ Visit `http://localhost:5173` to interact with the AXIOM AI dashboard.
 
 ## 📝 Changelog
 
+- **v1.4** — AI Startup Idea Generator (research-to-startup pipeline)
+- **v1.3** — Research Paper Comparison (multi-paper structured analysis), Document deletion (Qdrant + Storage + DB cleanup)
 - **v1.2** — Structured Message Renderer, Summary Quick-Action, QA fallback retrieval, HTML→Markdown sanitization
 - **v1.1** — Split-Screen Research Workspace, Document metadata injection, Vector filter grounding
 - **v1.0** — Initial RAG pipeline, Auth system, Document upload, Chat interface

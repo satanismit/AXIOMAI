@@ -19,7 +19,7 @@ const Login = () => {
         if (error) {
             setError(error.message);
         } else {
-            navigate('/dashboard/home', { replace: true });
+            navigate('/', { replace: true });
         }
     };
 
@@ -27,7 +27,7 @@ const Login = () => {
         setError('');
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: `${window.location.origin}/dashboard/home` },
+            options: { redirectTo: `${window.location.origin}/` },
         });
         if (error) setError(error.message);
     };

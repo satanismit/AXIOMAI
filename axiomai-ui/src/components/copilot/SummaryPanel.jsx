@@ -37,7 +37,7 @@ const InsightCard = ({ title, content, isExpanded, onToggle }) => (
     </div>
 );
 
-const SummaryPanel = ({ documentName }) => {
+const SummaryPanel = ({ documentName, documentId }) => {
     const [summaryData, setSummaryData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -49,7 +49,7 @@ const SummaryPanel = ({ documentName }) => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
-            const res = await fetch(`http://localhost:8000/api/summary?file_name=${encodeURIComponent(documentName)}`, {
+            const res = await fetch(`http://localhost:8000/api/summary?document_id=${encodeURIComponent(documentId)}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

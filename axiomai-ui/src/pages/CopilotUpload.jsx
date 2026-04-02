@@ -7,6 +7,7 @@ const CopilotUpload = () => {
     const navigate = useNavigate();
     const [papers, setPapers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [deletingId, setDeletingId] = useState(null);
 
     const fetchDocuments = async () => {
         try {
@@ -30,6 +31,22 @@ const CopilotUpload = () => {
 
     const handleUploadSuccess = () => {
         fetchDocuments();
+    };
+
+    const handleDelete = async (paperId, paperName) => {
+        if (!window.confirm(`Delete "${paperName}"?\n\nThis will permanently remove the document, all its indexed vectors, and stored files.`)) {
+            return;
+        }
+
+        setDeletingId(paperId);
+        try {
+            await fetchWithAuth(`/documents/${paperId}`, { method: 'DELETE' });
+            setPapers(prev => prev.filter(p => p.id !== paperId));
+        } catch (err) {
+            alert(`Failed to delete: ${err.message}`);
+        } finally {
+            setDeletingId(null);
+        }
     };
 
     return (
@@ -57,7 +74,9 @@ const CopilotUpload = () => {
                             padding: '1.25rem', 
                             display: 'flex', 
                             justifyContent: 'space-between', 
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            opacity: deletingId === paper.id ? 0.5 : 1,
+                            transition: 'opacity 0.3s'
                         }}>
                             <div>
                                 <h4 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '1.1rem', fontWeight: 500, letterSpacing: 'normal', textTransform: 'none' }}>
@@ -73,31 +92,61 @@ const CopilotUpload = () => {
                                 </div>
                             </div>
                             
-                            <button 
-                                onClick={() => navigate(`/dashboard/copilot/chat?doc_id=${paper.id}&doc_name=${encodeURIComponent(paper.name)}`)}
-                                className="mono"
-                                style={{
-                                    background: 'var(--color-intelligence-dim)',
-                                    color: 'var(--color-intelligence)',
-                                    border: '1px solid var(--color-intelligence)',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                    fontSize: '0.8rem',
-                                    letterSpacing: '0.5px'
-                                }}
-                                onMouseOver={(e) => {
-                                    e.currentTarget.style.background = 'var(--color-intelligence)';
-                                    e.currentTarget.style.color = '#fff';
-                                }}
-                                onMouseOut={(e) => {
-                                    e.currentTarget.style.background = 'var(--color-intelligence-dim)';
-                                    e.currentTarget.style.color = 'var(--color-intelligence)';
-                                }}
-                            >
-                                OPEN CHAT -{'>'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <button 
+                                    onClick={() => navigate(`/dashboard/copilot/chat?doc_id=${paper.id}&doc_name=${encodeURIComponent(paper.name)}`)}
+                                    className="mono"
+                                    style={{
+                                        background: 'var(--color-intelligence-dim)',
+                                        color: 'var(--color-intelligence)',
+                                        border: '1px solid var(--color-intelligence)',
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        fontSize: '0.8rem',
+                                        letterSpacing: '0.5px'
+                                    }}
+                                    onMouseOver={(e) => {
+                                        e.currentTarget.style.background = 'var(--color-intelligence)';
+                                        e.currentTarget.style.color = '#fff';
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.background = 'var(--color-intelligence-dim)';
+                                        e.currentTarget.style.color = 'var(--color-intelligence)';
+                                    }}
+                                >
+                                    OPEN CHAT -{'>'} 
+                                </button>
+
+                                <button 
+                                    onClick={() => handleDelete(paper.id, paper.name)}
+                                    disabled={deletingId === paper.id}
+                                    className="mono"
+                                    style={{
+                                        background: 'transparent',
+                                        color: 'var(--text-muted)',
+                                        border: '1px solid var(--border-subtle)',
+                                        padding: '0.5rem 0.75rem',
+                                        borderRadius: '6px',
+                                        cursor: deletingId === paper.id ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.2s',
+                                        fontSize: '0.8rem'
+                                    }}
+                                    onMouseOver={(e) => {
+                                        if (deletingId !== paper.id) {
+                                            e.currentTarget.style.borderColor = 'var(--status-risk)';
+                                            e.currentTarget.style.color = 'var(--status-risk)';
+                                        }
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                                        e.currentTarget.style.color = 'var(--text-muted)';
+                                    }}
+                                >
+                                    {deletingId === paper.id ? '...' : '✕'}
+                                </button>
+                            </div>
                         </div>
                     ))}
                     

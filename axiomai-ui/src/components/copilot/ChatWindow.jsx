@@ -29,7 +29,7 @@ const ChatWindow = ({ documentId, documentName, onPlayAudio }) => {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
             
-            const res = await fetch(`http://localhost:8000/api/summary?file_name=${encodeURIComponent(documentName)}`, {
+            const res = await fetch(`http://localhost:8000/api/summary?document_id=${encodeURIComponent(documentId)}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

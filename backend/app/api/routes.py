@@ -10,11 +10,15 @@ from app.summary.engine import generate_structured_summary
 from app.tts.service import generate_audio
 from app.auth.verify_token import get_current_user
 from app.api.documents import router as documents_router
+from app.comparison.routes import router as comparison_router
+from app.ideas.routes import router as ideas_router
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 router.include_router(documents_router, prefix="/documents", tags=["documents"])
+router.include_router(comparison_router, tags=["comparison"])
+router.include_router(ideas_router, tags=["ideas"])
 
 
 class ChatRequest(BaseModel):
@@ -66,16 +70,42 @@ async def chat_interaction(
 
 @router.post("/summary")
 async def get_summary(
-    file_name: str,
+    document_id: str,
     current_user: dict = Depends(get_current_user),
 ):
-    """Generate structured paper summary. Requires valid Supabase JWT."""
-    file_path = f"uploads/{file_name}"
-    if not os.path.exists(file_path):
-        return {"error": "File not found"}
+    """Generate structured paper summary by downloading PDF from Supabase Storage."""
+    user_id = current_user["user_id"]
 
     try:
-        summary = generate_structured_summary(file_path)
+        # 1. Get storage path from documents table
+        from supabase import create_client
+        from dotenv import load_dotenv
+        load_dotenv()
+        sb_url = os.getenv("SUPABASE_URL", "")
+        sb_key = os.getenv("SUPABASE_KEY", os.getenv("SUPABASE_JWT_SECRET", ""))
+        sb = create_client(sb_url, sb_key)
+
+        res = sb.table("documents").select("storage_path, file_name").eq("id", document_id).eq("user_id", user_id).execute()
+        if not res.data:
+            return {"error": "Document not found"}
+
+        storage_path = res.data[0]["storage_path"]
+        file_name = res.data[0]["file_name"]
+
+        # 2. Download from Supabase Storage to temp local file
+        file_bytes = sb.storage.from_("research-documents").download(storage_path)
+        os.makedirs("uploads", exist_ok=True)
+        temp_path = f"uploads/_summary_{document_id}_{file_name}"
+        with open(temp_path, "wb") as f:
+            f.write(file_bytes)
+
+        # 3. Generate summary
+        summary = generate_structured_summary(temp_path)
+
+        # 4. Cleanup temp file
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
         return {"summary": summary}
     except Exception as e:
         logger.error(f"[SUMMARY ERROR] {e}")
